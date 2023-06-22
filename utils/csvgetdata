@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# Simple CSV data retriever
+# Usage:
+# ./csvgetdata Books > targetfile.csv             # all fields
+# ./csvgetdata Books ID,title > targetfile.csv    # just ID and title
+
+set -eo pipefail
+
+declare branch="main"
+declare baseurl="https://raw.githubusercontent.com/SAP-samples/cloud-cap-samples/$branch/bookshop/db/data"
+declare sourcens="sap.capire.bookshop"
+
+main() {
+
+  local entity="${1:?Specify entity e.g. \"Books\"}"
+  local fields="$2"
+  local cmd
+
+  # If no fields specified, then output all of them, otherwise specify them
+  if [[ -z $fields ]]; then
+    cmd="cat"
+  else
+    cmd="cut -f $fields"
+  fi
+
+  # shellcheck disable=SC2086
+  curl \
+    --location \
+    --silent \
+    --fail \
+    --url "$baseurl/$sourcens-$entity.csv" \
+    | mlr --csv $cmd
+
+}
+
+main "$@"
